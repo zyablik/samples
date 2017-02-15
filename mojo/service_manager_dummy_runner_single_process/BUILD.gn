@@ -7,7 +7,7 @@ mojom("some_interface") {
   ]
 }
 
-executable("service-manager-hello-single-process-1") {
+executable("service-manager-dummy-runner-single-process") {
 deps = [
     ":some_interface",
     "//base",

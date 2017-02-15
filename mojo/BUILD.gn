@@ -143,7 +143,9 @@ group("all") {
     ":hello-mojo-multi-process",
     ":interface-registry-single-process",
     ":interface-registry-multi-process",
-    "service_manager_hello_1:service-manager-hello-single-process-1",
-    "service_manager_hello_2:service-manager-hello-single-process-2"
+    "service_manager_dummy_runner_single_process:service-manager-dummy-runner-single-process",
+    "service_manager_dummy_runner_multi_process:service-manager-dummy-runner-multi-process",
+    "service_manager_native_runner_single_process:service-manager-native-runner-single-process",
+    "service_manager_native_runner_multi_process:service-manager-native-runner-multi-process",
   ]
 }

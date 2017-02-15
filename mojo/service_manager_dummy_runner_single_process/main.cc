@@ -6,13 +6,10 @@
 #include "mojo/edk/embedder/embedder.h"
 #include "mojo/public/cpp/bindings/interface_request.h"
 #include "mojo/public/cpp/bindings/strong_binding.h"
-#include "samples/mojo/service_manager_hello/some_interface.mojom.h"
-#include "services/catalog/public/interfaces/catalog.mojom.h"
+#include "samples/mojo/service_manager_dummy_runner_single_process/some_interface.mojom.h"
 #include "services/shell/native_runner.h"
-#include "services/shell/public/cpp/interface_registry.h"
 #include "services/shell/public/cpp/service.h"
 #include "services/shell/public/cpp/service_context.h"
-#include "services/shell/public/cpp/service_runner.h"
 #include "services/shell/service_manager.h"
 #include <string>
 
@@ -21,31 +18,34 @@ class OtherService: public shell::Service,
                     public mojom::SomeInterface
 {
 public:
-  void OnStart(const shell::Identity& identity) override {
-    printf("OtherService::OnStart\n");
+  OtherService() {
+    printf("OtherService::OtherService this = %p\n", this);
   }
-  
+
+  void OnStart(const shell::Identity& identity) override {
+    printf("OtherService::OnStart this = %p\n", this);
+  }
+
   // Overridden from shell::Service:
-  bool OnConnect(const shell::Identity& remote_identity, shell::InterfaceRegistry* registry) override {
-    printf("OtherService::OnConnect");
+  bool OnConnect(const shell::Identity& remote_identity, shell::InterfaceRegistry * registry) override {
+    printf("OtherService::OnConnect this = %p remote_identity.name = %s\n", this, remote_identity.name().c_str());
     registry->AddInterface<mojom::SomeInterface>(this);
     return true;
   }
 
   // Overridden from shell::InterfaceFactory<mojom::SomeInterface>:
   void Create(const shell::Identity& remote_identity, mojom::SomeInterfaceRequest request) override {
-    printf("OtherService::Create\n");
+    printf("OtherService::Create this = %p\n", this);
     bindings_.AddBinding(this, std::move(request));
   }
 
   // Overridden from mojom::SomeInterface:
   void Foo() override { 
-    printf("OtherService::Foo\n");
+    printf("OtherService::Foo this = %p\n", this);
   }
 
   mojo::BindingSet<mojom::SomeInterface> bindings_;
 };
-
 
 class MyService : public shell::Service {
  public:
@@ -72,56 +72,40 @@ class MyService : public shell::Service {
   
 };
 
-MojoResult ServiceMain(MojoHandle service_request_handle) {
-  return shell::ServiceRunner(new MyService).Run(service_request_handle);
-}
-
-class DummyCatalog: public shell::mojom::Service,
+class DummyResolver: public shell::mojom::Service,
                     public shell::mojom::Resolver,
-                    public shell::InterfaceFactory<shell::mojom::Resolver>,
-                    public catalog::mojom::Catalog,
-                    public shell::InterfaceFactory<catalog::mojom::Catalog>
+                    public shell::InterfaceFactory<shell::mojom::Resolver>
 {
  public:
-  DummyCatalog() {
-    printf("DummyCatalog::DummyCatalog() this = %p\n", this);
+  DummyResolver() {
+    printf("DummyResolver::DummyResolver() this = %p\n", this);
   }
 
-  ~DummyCatalog() override {
-    printf("DummyCatalog::~DummyCatalog() this = %p\n", this);
+  ~DummyResolver() override {
+    printf("DummyResolver::~DummyResolver() this = %p\n", this);
   }
 
   void OnStart(const shell::Identity& identity, const OnStartCallback& callback) override {
-    printf("DummyCatalog::OnStart identity name = %s user_id = %s instance = %s\n", identity.name().c_str(), identity.user_id().c_str(), identity.instance().c_str());
+    printf("DummyResolver::OnStart identity name = %s user_id = %s instance = %s\n", identity.name().c_str(), identity.user_id().c_str(), identity.instance().c_str());
     callback.Run(nullptr);
   }
 
   void OnConnect(const shell::Identity& source, shell::mojom::InterfaceProviderRequest interfaces, const shell::CapabilityRequest& allowed_capabilities) override {
-    printf("DummyCatalog::OnConnect source name = %s user_id = %s instance = %s\n", source.name().c_str(), source.user_id().c_str(), source.instance().c_str());
+    printf("DummyResolver::OnConnect source name = %s user_id = %s instance = %s\n", source.name().c_str(), source.user_id().c_str(), source.instance().c_str());
     shell::InterfaceRegistry * registry = new shell::InterfaceRegistry(source, allowed_capabilities);
     registry->Bind(std::move(interfaces));
     registry->AddInterface<shell::mojom::Resolver>(this);
-    registry->AddInterface<catalog::mojom::Catalog>(this);
-
-//    registry->AddInterface<filesystem::mojom::Directory>(this);
-
   }
 
   // shell::InterfaceFactory<shell::mojom::Resolver>:
   void Create(const shell::Identity& remote_identity, shell::mojom::ResolverRequest request) override {
-     printf("DummyCatalog::Create(ResolverRequest) remote_identity name = %s user_id = %s instance = %s\n", remote_identity.name().c_str(), remote_identity.user_id().c_str(), remote_identity.instance().c_str());
-     mojo::MakeStrongBinding(std::unique_ptr<DummyCatalog>(this), std::move(request));
-  }
-
-  // shell::InterfaceFactory<shell::mojom::Catalog>:
-  void Create(const shell::Identity& remote_identity, catalog::mojom::CatalogRequest request) override {
-     printf("DummyCatalog::Create(CatalogRequest) remote_identity name = %s user_id = %s instance = %s\n", remote_identity.name().c_str(), remote_identity.user_id().c_str(), remote_identity.instance().c_str());
-     mojo::MakeStrongBinding(std::unique_ptr<DummyCatalog>(this), std::move(request));
+     printf("DummyResolver::Create(ResolverRequest) remote_identity name = %s user_id = %s instance = %s\n", remote_identity.name().c_str(), remote_identity.user_id().c_str(), remote_identity.instance().c_str());
+     mojo::MakeStrongBinding(std::unique_ptr<DummyResolver>(this), std::move(request));
   }
 
   // shell::InterfaceFactory<shell::mojom::Resolver>:
   void ResolveMojoName(const std::string& mojo_name, const ResolveMojoNameCallback& callback) {
-    printf("DummyCatalog::ResolveMojoName mojo_name = %s\n", mojo_name.c_str());
+    printf("DummyResolver::ResolveMojoName mojo_name = %s\n", mojo_name.c_str());
     shell::mojom::ResolveResultPtr result(shell::mojom::ResolveResult::New());
     result->name = mojo_name;
     result->resolved_name = mojo_name;
@@ -140,27 +124,6 @@ class DummyCatalog: public shell::mojom::Service,
     result->package_path = base::FilePath(std::string("file:///dummy/path/").append(mojo_name));
     callback.Run(std::move(result));
   }
-
-  // mojom::Catalog:
-  void GetEntries(const base::Optional<std::vector<std::string>>& names, const GetEntriesCallback& callback) override {
-    printf("DummyCatalog::GetEntries\n");
-    std::vector<catalog::mojom::EntryPtr> entries;
-    callback.Run(std::move(entries));
-  }
-
-  void GetEntriesProvidingClass(const std::string& clazz, const GetEntriesProvidingClassCallback& callback) override {
-    printf("DummyCatalog::GetEntriesProvidingClass clazz = %s\n", clazz.c_str());
-    std::vector<catalog::mojom::EntryPtr> entries;
-    callback.Run(std::move(entries));
-  }
-
-  void GetEntriesConsumingMIMEType(const std::string& mime_type, const GetEntriesConsumingMIMETypeCallback& callback) override {
-    printf("DummyCatalog::GetEntriesConsumingMIMEType\n");
-  }
-
-  void GetEntriesSupportingScheme(const std::string& scheme, const GetEntriesSupportingSchemeCallback& callback) override {
-    printf("DummyCatalog::GetEntriesSupportingScheme\n");
-  }
 };
 
 // inspired by InProcessNativeRunner::Start and InProcessNativeRunner::Run
@@ -175,13 +138,17 @@ public:
     shell::mojom::ServicePtr client;
     shell::mojom::ServiceRequest request = mojo::GetProxy(&client);
 
-    // inspired by ServiceRunner::Run()
-    shell::Service * service = new OtherService();
-    std::unique_ptr<shell::ServiceContext> context(new shell::ServiceContext(service, mojo::MakeRequest<shell::mojom::Service>(request.PassMessagePipe())));
-    service->set_context(std::move(context));
+    if(target.name() == "service:other_service") {
+      // inspired by ServiceRunner::Run()
+      shell::Service * service = new OtherService();
+      std::unique_ptr<shell::ServiceContext> context(new shell::ServiceContext(service, mojo::MakeRequest<shell::mojom::Service>(request.PassMessagePipe())));
+      service->set_context(std::move(context));
+    } else {
+      printf("DummyNativeRunner::Start unknown target.name() = %s\n", target.name().c_str());
+      exit(1);
+    }
 
     pid_available_callback.Run(base::Process::Current().Pid());
-//    app_completed_callback.Run();
 
     return client;
   }
@@ -204,18 +171,33 @@ int main(int arc, char ** argv) {
   mojo::edk::Init();
 
   std::unique_ptr<shell::NativeRunnerFactory> runner_factory(new DummyRunnerFactory());
-  shell::mojom::ServicePtr catalog_ptr;
-  shell::mojom::ServiceRequest catalog_request = mojo::GetProxy(&catalog_ptr);
+  shell::mojom::ServicePtr resolver_ptr;
+  shell::mojom::ServiceRequest resolver_request = mojo::GetProxy(&resolver_ptr);
   
-  DummyCatalog catalog;
-  mojo::Binding<shell::mojom::Service> catalog_binding(&catalog, std::move(catalog_request));
+  DummyResolver resolver;
+  mojo::Binding<shell::mojom::Service> catalog_binding(&resolver, std::move(resolver_request));
   
-  shell::ServiceManager * service_manager = new shell::ServiceManager(std::move(runner_factory), std::move(catalog_ptr));
+  shell::ServiceManager * service_manager = new shell::ServiceManager(std::move(runner_factory), std::move(resolver_ptr));
   shell::mojom::ServiceRequest my_service_request = service_manager->StartEmbedderService("service:my_service");
 
   shell::Service * my_service = new MyService();
-  std::unique_ptr<shell::ServiceContext> context(new shell::ServiceContext(my_service, mojo::MakeRequest<shell::mojom::Service>(my_service_request.PassMessagePipe())));
+  std::unique_ptr<shell::ServiceContext> context(new shell::ServiceContext(my_service, std::move(my_service_request)));
   my_service->set_context(std::move(context)); // from shell::ServiceRunner(new MyService).Run(service_request_handle)
+
+  std::unique_ptr<shell::ConnectParams> connect_params(new shell::ConnectParams());
+  connect_params->set_source(shell::Identity("service:root", shell::mojom::kRootUserID));
+  connect_params->set_target(shell::Identity("service:other_service", shell::mojom::kRootUserID));
+
+  shell::mojom::InterfaceProviderPtr remote_interfaces;
+  shell::mojom::InterfaceProviderRequest remote_request = mojo::GetProxy(&remote_interfaces);
+  connect_params->set_remote_interfaces(std::move(remote_request));
+
+  service_manager->Connect(std::move(connect_params));
   
+  mojom::SomeInterfacePtr some_interface_ptr;
+  remote_interfaces->GetInterface(mojom::SomeInterface::Name_, mojo::GetProxy(&some_interface_ptr).PassMessagePipe());
+
+  some_interface_ptr->Foo();
+
   base::RunLoop().Run();
 }

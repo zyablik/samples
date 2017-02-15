@@ -1,0 +1,47 @@
+import("//services/shell/public/cpp/service.gni")
+import("//mojo/public/tools/bindings/mojom.gni")
+
+mojom("some_interface") {
+  sources = [
+    "some_interface.mojom",
+  ]
+}
+
+executable("service-manager-dummy-runner-multi-process-master") {
+deps = [
+    ":some_interface",
+    "//base",
+    "//mojo/edk/system",
+    "//mojo/public/cpp/bindings",
+    "//services/shell/public/cpp:cpp",
+    "//services/shell/runner/common",
+    "//services/shell:shell",
+  ]
+
+  sources = [
+    "master.cc",
+  ]
+}
+
+executable("service-manager-dummy-runner-multi-process-slave") {
+deps = [
+    ":some_interface",
+    "//base",
+    "//mojo/edk/system",
+    "//mojo/public/cpp/bindings",
+    "//services/shell/public/cpp:cpp",
+    "//services/shell/runner/common",
+    "//services/shell:shell",
+  ]
+
+  sources = [
+    "slave.cc",
+  ]
+}
+
+group("service-manager-dummy-runner-multi-process") {
+  deps = [
+    ":service-manager-dummy-runner-multi-process-master",
+    ":service-manager-dummy-runner-multi-process-slave"
+  ]
+}

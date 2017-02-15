@@ -1,11 +1,15 @@
 {
+  "manifest_version": 1,
   "name": "service:other_service",
   "display_name": "Other Service",
+
   "interface_provider_specs": {
     "service_manager:connector": {
       "provides": {
         "other_capability": [ "mojom.SomeInterface" ]
       }
     }
-  }
+  },
+
+  "capabilities": {}
 }
