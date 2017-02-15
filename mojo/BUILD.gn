@@ -1,0 +1,149 @@
+executable("mojo-channel-single-process") {
+  sources = [
+    "mojo_channel_single_process.cc",
+  ]
+
+  deps = [
+    "//base",
+    "//mojo/edk/system",
+  ]
+}
+
+executable("mojo-channel-multi-process-master") {
+  sources = [
+    "mojo_channel_multi_process_master.cc",
+  ]
+
+  deps = [
+    "//base",
+    "//mojo/edk/system",
+  ]
+}
+
+executable("mojo-channel-multi-process-slave") {
+  sources = [
+    "mojo_channel_multi_process_slave.cc",
+  ]
+
+  deps = [
+    "//base",
+    "//mojo/edk/system",
+  ]
+}
+
+group("mojo-channel-multi-process") {
+  deps = [
+    ":mojo-channel-multi-process-master",
+    ":mojo-channel-multi-process-slave"
+  ]
+}
+
+import("//mojo/public/tools/bindings/mojom.gni")
+
+mojom("hello_mojo_interface") {
+  sources = [
+    "hello_mojo.mojom",
+  ]
+}
+
+executable("hello-mojo-single-process") {
+  deps = [
+    ":hello_mojo_interface",
+    "//mojo/edk/system",
+    "//mojo/public/cpp/bindings",
+  ]
+
+  sources = [
+    "hello_mojo_single_process.cc",
+  ]
+}
+
+executable("hello-mojo-multi-process-master") {
+  deps = [
+    ":hello_mojo_interface",
+    "//mojo/edk/system",
+    "//mojo/public/cpp/bindings",
+  ]
+
+  sources = [
+    "hello_mojo_multi_process_master.cc",
+  ]
+}
+
+executable("hello-mojo-multi-process-slave") {
+  deps = [
+    ":hello_mojo_interface",
+    "//mojo/edk/system",
+    "//mojo/public/cpp/bindings",
+  ]
+
+  sources = [
+    "hello_mojo_multi_process_slave.cc",
+  ]
+}
+
+group("hello-mojo-multi-process") {
+  deps = [
+    ":hello-mojo-multi-process-master",
+    ":hello-mojo-multi-process-slave",
+  ]
+}
+
+executable("interface-registry-single-process") {
+  deps = [
+    ":hello_mojo_interface",
+    "//mojo/edk/system",
+    "//mojo/public/cpp/bindings",
+    "//services/shell/public/cpp:cpp",
+  ]
+
+  sources = [
+    "interface_registry_single_process.cc",
+  ]
+}
+
+executable("interface-registry-multi-process-master") {
+  deps = [
+    ":hello_mojo_interface",
+    "//mojo/edk/system",
+    "//mojo/public/cpp/bindings",
+    "//services/shell/public/cpp:cpp",
+  ]
+
+  sources = [
+    "interface_registry_multi_process_master.cc",
+  ]
+}
+
+executable("interface-registry-multi-process-slave") {
+  deps = [
+    ":hello_mojo_interface",
+    "//mojo/edk/system",
+    "//mojo/public/cpp/bindings",
+    "//services/shell/public/cpp:cpp",
+  ]
+
+  sources = [
+    "interface_registry_multi_process_slave.cc",
+  ]
+}
+
+group("interface-registry-multi-process") {
+  deps = [
+    ":interface-registry-multi-process-master",
+    ":interface-registry-multi-process-slave",
+  ]
+}
+
+group("all") {
+  deps = [
+    ":mojo-channel-single-process",
+    ":mojo-channel-multi-process",
+    ":hello-mojo-single-process",
+    ":hello-mojo-multi-process",
+    ":interface-registry-single-process",
+    ":interface-registry-multi-process",
+    "service_manager_hello_1:service-manager-hello-single-process-1",
+    "service_manager_hello_2:service-manager-hello-single-process-2"
+  ]
+}

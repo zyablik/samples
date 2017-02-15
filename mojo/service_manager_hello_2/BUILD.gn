@@ -1,0 +1,40 @@
+import("//services/shell/public/cpp/service.gni")
+import("//services/shell/public/service_manifest.gni")
+import("//mojo/public/tools/bindings/mojom.gni")
+
+mojom("some_interface") {
+  sources = [
+    "some_interface.mojom",
+  ]
+}
+
+service_manifest("my_service_manifest") {
+  name = "my_service"
+  source = "my_service_manifest.json"
+}
+
+service_manifest("other_service_manifest") {
+  name = "other_service"
+  source = "other_service_manifest.json"
+}
+
+executable("service-manager-hello-single-process-2") {
+deps = [
+    ":some_interface",
+    "//base",
+    "//mojo/edk/system",
+    "//mojo/public/cpp/bindings",
+    "//services/shell/public/cpp:cpp",
+    "//services/shell:shell",
+    
+  ]
+
+  data_deps = [
+    ":my_service_manifest",
+    ":other_service_manifest"
+  ]
+
+  sources = [
+    "main.cc",
+  ]
+}
