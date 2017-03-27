@@ -1,9 +1,9 @@
-#include <fcntl.h>
-#include "fps.h"
 #include <errno.h>
+#include <fcntl.h>
+#include <linux/fb.h>
 #include <stdlib.h>
-#include <string.h>
-#include <sys/stat.h>
+#include <sys/ioctl.h>
+#include <sstream>
 #include <unistd.h>
 
 // outputs only when drawing:
