@@ -25,7 +25,7 @@ struct hwc_procs hprocs = {
 */
 
 
-HWCNativeWindow::HWCNativeWindow(): mRefCount(0), mBufferCount(0), mWidth(0), mHeight(0), mFormat(0), mUsage(0) {
+HWCNativeWindow::HWCNativeWindow(): mRefCount(0), mWidth(0), mHeight(0), mFormat(0), mUsage(0) {
     ANativeWindow::common.magic = ANDROID_NATIVE_WINDOW_MAGIC;
     ANativeWindow::common.version = sizeof(ANativeWindow);
     ANativeWindow::common.incRef = HWCNativeWindow::_incRef;
@@ -45,7 +45,6 @@ HWCNativeWindow::HWCNativeWindow(): mRefCount(0), mBufferCount(0), mWidth(0), mH
     const_cast<int&>(ANativeWindow::minSwapInterval) = 0;
     const_cast<int&>(ANativeWindow::maxSwapInterval) = 0;
 
-    mBufferCount = 2;
     mFormat = HAL_PIXEL_FORMAT_RGBA_8888; // HAL_PIXEL_FORMAT_RGB_565
     mUsage = GRALLOC_USAGE_HW_COMPOSER; // GRALLOC_USAGE_SW_READ_RARELY
 
@@ -141,7 +140,6 @@ HWCNativeWindow::HWCNativeWindow(): mRefCount(0), mBufferCount(0), mWidth(0), mH
 
 HWCNativeWindow::~HWCNativeWindow() {
     printf("HWCNativeWindow::~HWCNativeWindow this = %p\n", this);
-    freeBuffers();
 }
 
 void HWCNativeWindow::_incRef(struct android_native_base_t * base) {
@@ -218,7 +216,6 @@ int HWCNativeWindow::_perform(ANativeWindow * window, int operation, ... ) {
             int usage = va_arg(args, int);
             printf(" usage = 0x%x mUsage = 0x%x\n", usage, self->mUsage);
             if(self->mUsage != usage) {
-                self->freeBuffers();
                 self->mUsage |= usage;
             }
             break;
@@ -226,11 +223,7 @@ int HWCNativeWindow::_perform(ANativeWindow * window, int operation, ... ) {
 
         case NATIVE_WINDOW_SET_BUFFER_COUNT: {
             int buffer_count = va_arg(args, int);
-            printf(" new buffer count = %d prev buffer_count = %d\n", buffer_count, self->mBufferCount);
-            if(self->mBufferCount != buffer_count) {
-                self->freeBuffers();
-                self->mBufferCount = buffer_count;
-            }
+            printf(" new buffer count = %d\n", buffer_count);
             break;
         }
 
@@ -242,7 +235,6 @@ int HWCNativeWindow::_perform(ANativeWindow * window, int operation, ... ) {
                 break;
             }
             if(self->mFormat != buffer_format) {
-                self->freeBuffers();
                 self->mFormat = buffer_format;
             }
             break;
@@ -283,14 +275,8 @@ int HWCNativeWindow::_dequeueBuffer(ANativeWindow* window, ANativeWindowBuffer**
     printf("HWCNativeWindow::_dequeueBuffer window = %p\n", window);
     HWCNativeWindow * self = static_cast<HWCNativeWindow *>(window);
 
-    if(self->mBuffers.empty())
-    self->allocBuffers();
-
-    NativeWindowBuffer * native_buffer = (*(self->mNextBackBuffer++));
+    NativeWindowBuffer * native_buffer = new NativeWindowBuffer(self->mWidth, self->mHeight, self->mFormat, self->mUsage);
     *buffer = static_cast<ANativeWindowBuffer *>(native_buffer);
-
-    if(self->mNextBackBuffer == self->mBuffers.end())
-        self->mNextBackBuffer = self->mBuffers.begin();
 
     *fenceFd = dup(native_buffer->fenceFd);
     close(native_buffer->fenceFd);
@@ -349,24 +335,4 @@ int HWCNativeWindow::_queueBuffer(ANativeWindow* window, ANativeWindowBuffer* bu
     printf("%ld [tid = %d] HWCNativeWindow::_queueBuffer exit window = %p buffer = %p fence = %d\n",start_time.tv_sec * 1000 + start_time.tv_usec / 1000, gettid(),  window, buffer, fenceFd);
 
     return 0;
-}
-
-void HWCNativeWindow::allocBuffers() {
-    printf("HWCNativeWindow::allocBuffers\n");
-    for(int i = 0; i < mBufferCount; i++) {
-        NativeWindowBuffer * buf = new NativeWindowBuffer(mWidth, mHeight, mFormat, mUsage);
-        mBuffers.push_back(buf);
-    }
-
-    mNextBackBuffer = mBuffers.begin();
-}
-
-void HWCNativeWindow::freeBuffers() {
-    printf("HWCNativeWindow::freeBuffers\n");
-    for(NativeWindowBuffer * buffer : mBuffers) {
-        buffer->common.decRef(&buffer->common);
-    }
-
-    mBuffers.clear();
-    mNextBackBuffer = mBuffers.end();
 }

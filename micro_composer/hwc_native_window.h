@@ -27,14 +27,10 @@ private:
 
     volatile int mRefCount;
 
-    int mBufferCount;
     int mWidth;
     int mHeight;
     int mFormat;
     int mUsage;
-
-    std::list<NativeWindowBuffer *> mBuffers;
-    std::list<NativeWindowBuffer *>::iterator mNextBackBuffer;
 
     hwc_composer_device_1_t * hwcdevice;
     hwc_display_contents_1_t ** mList;

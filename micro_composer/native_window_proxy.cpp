@@ -147,8 +147,10 @@ int NativeWindowProxy::_dequeueBuffer(ANativeWindow* window, ANativeWindowBuffer
     }
 
     NativeWindowBuffer * native_buffer = read_native_window_buffer_from_parcel(response);
+    native_buffer->ownGrMemory = false;
     *buffer = static_cast<ANativeWindowBuffer *>(native_buffer);
 
+    printf("NativeWindowProxy::_dequeueBuffer native_buffer->fenceFd = %d\n", native_buffer->fenceFd);
     *fenceFd = dup(native_buffer->fenceFd);
     close(native_buffer->fenceFd);
     native_buffer->fenceFd = -1;
@@ -160,10 +162,11 @@ int NativeWindowProxy::_queueBuffer(ANativeWindow* window, ANativeWindowBuffer* 
     printf("[tid = %d] NativeWindowProxy::_queueBuffer window = %p buffer = %p fence = %d\n", gettid(), window, buffer, fenceFd);
     NativeWindowProxy * self = static_cast<NativeWindowProxy *>(window);
 
+    static_cast<NativeWindowBuffer *>(buffer)->fenceFd = fenceFd;
+
     android::Parcel query, response;
     write_native_window_buffer_to_parcel(*static_cast<NativeWindowBuffer *>(buffer), query);
     android::status_t result = self->native_window_binder->transact(INativeWindow::QUEUE_BUFFER_TRANSACTION, query, &response);
-    query.writeFileDescriptor(fenceFd);
 
     if(result != android::NO_ERROR) {
         printf("FAILED result = %s\n", android_status(result).c_str());

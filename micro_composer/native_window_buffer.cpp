@@ -1,4 +1,5 @@
 #include <hardware/gralloc.h>
+#include <stdlib.h>
 #include "native_window_buffer.h"
 #include <stdio.h>
 #include <system/window.h>
@@ -7,9 +8,7 @@ hw_module_t * NativeWindowBuffer::gr_module = NULL;
 alloc_device_t * NativeWindowBuffer::gr_dev = NULL;
 
 NativeWindowBuffer::NativeWindowBuffer(): fenceFd(-1), mRefCount(0) {
-    printf("[tid = %d] NativeWindowBuffer::NativeWindowBuffer: created: this = %p\n", gettid(), this);
-//    ANativeWindowBuffer::common.magic = ANDROID_NATIVE_BUFFER_MAGIC;
-//    ANativeWindowBuffer::common.version = sizeof(ANativeWindowBuffer);
+    printf("[tid = %d] NativeWindowBuffer::NativeWindowBuffer: created: this = %p anwb = %p\n", gettid(), this, static_cast<ANativeWindowBuffer *>(this));
 
     ANativeWindowBuffer::handle = nullptr;
     ANativeWindowBuffer::common.incRef = _incRef;
@@ -18,7 +17,7 @@ NativeWindowBuffer::NativeWindowBuffer(): fenceFd(-1), mRefCount(0) {
 }
 
 NativeWindowBuffer::NativeWindowBuffer(int _width, int _height, int _format, int _usage): fenceFd(-1), mRefCount(0) {
-    printf("[tid = %d] NativeWindowBuffer::NativeWindowBuffer = %p\n", gettid(), this);
+    printf("[tid = %d] NativeWindowBuffer::NativeWindowBuffer = %p anwb = %p\n", gettid(), this, static_cast<ANativeWindowBuffer *>(this));
     ANativeWindowBuffer::width = _width;
     ANativeWindowBuffer::height = _height;
     ANativeWindowBuffer::format = _format;
@@ -53,12 +52,16 @@ NativeWindowBuffer::NativeWindowBuffer(int _width, int _height, int _format, int
 }
 
 NativeWindowBuffer::~NativeWindowBuffer() {
-    printf("[tid = %d] NativeWindowBuffer::~NativeWindowBuffer this = %p\n", gettid(), this);
-    if(gr_dev) {
-        gr_dev->free(gr_dev, handle);
+    printf("[tid = %d] NativeWindowBuffer::~NativeWindowBuffer this = %p anwb = %p ownGrMemory = %d gr_dev = %p handle = %p\n",
+           gettid(), this, static_cast<ANativeWindowBuffer *>(this), ownGrMemory, gr_dev, handle);
+    if(ownGrMemory) {
+        if(gr_dev)
+            gr_dev->free(gr_dev, handle);
     } else if(handle) {
         native_handle_close(handle);
+        ::free(const_cast<native_handle*>(handle));
     }
+
     if(fenceFd != -1)
         close(fenceFd);
 }
@@ -75,16 +78,16 @@ int NativeWindowBuffer::closeGrDev() {
 }
 
 void NativeWindowBuffer::_incRef(struct android_native_base_t * base) {
-    ANativeWindowBuffer * anb = reinterpret_cast<ANativeWindowBuffer *>(base);
-    NativeWindowBuffer * self = static_cast<NativeWindowBuffer *>(anb);
+    ANativeWindowBuffer * anwb = reinterpret_cast<ANativeWindowBuffer *>(base);
+    NativeWindowBuffer * self = static_cast<NativeWindowBuffer *>(anwb);
     __sync_fetch_and_add(&self->mRefCount, 1);
-    printf("[tid = %d] NativeWindowBuffer::_incRef self = %p anb = %p mRefCount = %d\n", gettid(), self, anb, self->mRefCount);
+    printf("[tid = %d] NativeWindowBuffer::_incRef self = %p anwb = %p mRefCount = %d\n", gettid(), self, anwb, self->mRefCount);
 }
 
 void NativeWindowBuffer::_decRef(struct android_native_base_t * base) {
-    ANativeWindowBuffer * anb = reinterpret_cast<ANativeWindowBuffer *>(base);
-    NativeWindowBuffer * self = static_cast<NativeWindowBuffer *>(anb);
-    printf("[tid = %d] NativeWindowBuffer::_decRef self = %p anb = %p mRerfCount = %d\n", gettid(), self, anb, self->mRefCount - 1);
+    ANativeWindowBuffer * anwb = reinterpret_cast<ANativeWindowBuffer *>(base);
+    NativeWindowBuffer * self = static_cast<NativeWindowBuffer *>(anwb);
+    printf("[tid = %d] NativeWindowBuffer::_decRef self = %p anwb = %p mRerfCount = %d\n", gettid(), self, anwb, self->mRefCount - 1);
     if (__sync_fetch_and_sub(&self->mRefCount, 1) == 1) {
         delete self;
     }

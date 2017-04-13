@@ -54,6 +54,7 @@ public:
     static int closeGrDev();
 
     int fenceFd;
+    bool ownGrMemory;
 
 private:
     virtual ~NativeWindowBuffer();

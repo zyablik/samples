@@ -148,6 +148,6 @@ void write_native_window_buffer_to_parcel(const NativeWindowBuffer& buffer, andr
         parcel.writeInt32(0);
     } else {
         parcel.writeInt32(1);
-        parcel.writeFileDescriptor(dup(buffer.fenceFd));
+        parcel.writeFileDescriptor(buffer.fenceFd);
     }
 }

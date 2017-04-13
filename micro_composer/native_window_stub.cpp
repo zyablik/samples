@@ -44,11 +44,8 @@ android::status_t NativeWindowStub::onTransact(uint32_t code, const android::Par
             int fenceFd;
             native_window->dequeueBuffer(native_window, &anative_buffer, &fenceFd);
             write_native_window_buffer_to_parcel(*static_cast<NativeWindowBuffer *>(anative_buffer), *reply);
-//             android::status_t resutl = reply->writeFileDescriptor(fenceFd);
-//             if(result != android::NO_ERROR) {
-//                 printf("[tid = %d] NativeWindowStub::onTransact DEQUEUE_BUFFER_TRANSACTION reply->writeFileDescriptor(%d) failed: %s\n", gettid(), fenceFd, android_status(result));
-//                 exit(1);
-//             }
+            static_cast<NativeWindowBuffer *>(anative_buffer)->ownGrMemory = false;
+            anative_buffer->common.decRef(&anative_buffer->common);
             break;
         }
 
@@ -57,6 +54,8 @@ android::status_t NativeWindowStub::onTransact(uint32_t code, const android::Par
             NativeWindowBuffer * native_buffer = read_native_window_buffer_from_parcel(data);
             int fenceFd = data.readFileDescriptor();
             native_window->queueBuffer(native_window, native_buffer, fenceFd);
+            native_buffer->ownGrMemory = true;
+            native_buffer->common.decRef(&native_buffer->common);
             break;
         }
 
