@@ -41,6 +41,7 @@ int main(int, char **) {
     }
     printf("HISIFB_VSYNC_CTRL enabled = %d\n", enabled);
 
+//  gles uses /sys/devices/virtual/graphics/fb0/vsync_event
     const char vsync_file_name[] = "/sys/class/graphics/fb0/vsync_event";
 //    const char vsync_file_name[] = "/sys/class/graphics/fb0/vsync_timestamp";
     int vsync_file_fd = open(vsync_file_name, O_RDONLY);
