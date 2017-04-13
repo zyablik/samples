@@ -24,6 +24,7 @@ public:
                 printf("SimpleService::onTransact TEST_SERVICE_COMMAND received flags = 0x%x dataSize = %zu num = %d, write fd = %d\n", flags, data.dataSize(), num, controlPipe[0]);
                 reply->writeInt32(num);
                 reply->writeFileDescriptor(controlPipe[0]);
+                reply->writeStrongBinder(this);
                 break;
             }
 
@@ -52,6 +53,8 @@ int main(int, char **) {
         exit(1);
     }
 
+    printf("registered service %s\n", android::String8(TestServiceName).string());
+
     sleep(1); // wait for service start
     android::sp<android::IBinder> binder = service_manager->getService(TestServiceName);
     if (binder == NULL) {
@@ -73,8 +76,9 @@ int main(int, char **) {
 
     int num = reply.readInt32();
     int fd = reply.readFileDescriptor();
+    android::sp<android::IBinder> remote_binder = reply.readStrongBinder();
 
-    printf("reply for SimpleService::TEST_SERVICE_COMMAND received: num = %d fd = %d\n", num, fd);
+    printf("reply for SimpleService::TEST_SERVICE_COMMAND received: num = %d fd = %d remote_binder interface = %s\n", num, fd, android::String8(remote_binder->getInterfaceDescriptor()).string());
 
     android::Parcel msg2;
     printf("before SimpleService::TEST_SERVICE_END sent\n");
