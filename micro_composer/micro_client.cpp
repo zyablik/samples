@@ -1,21 +1,46 @@
+
+extern "C" {
+#define MALI_PRODUCT_ID_TMIX 1
+// should math the values used for build libGLES_mali_v2.so (especially those which used in struct cctx_context)
+#define MALI_USE_COMMON_GRAPHICS 1
+#define MALI_USE_CL 1
+#define MALI_USE_GLES 1
+#define MALI_DEBUG 1
+
+#include <egl/src/mali_egl_display.h>
+#include <cctx/mali_cctx_structs.h>
+//void osup_destructor();
+}
+
 #include <EGL/egl.h>
 #include <GLES2/gl2.h>
 
+#include <binder/IPCThreadState.h>
 #include "hwc_native_window.h"
 #include "native_window_proxy.h"
+
 
 GLuint loadShader(GLenum shaderType, const char * source);
 GLuint createProgram(const char * vertexShaderStr, const char * fragmentShaderStr);
 static void checkEglError(const char* op, EGLBoolean returnVal = EGL_TRUE);
 static void checkGlError(const char* op);
-void asciiScreenshot2(int width, int height, int stride, char * pixels);
 
-int main(int, char **) {
+ANativeWindow * native_window = nullptr;
+
+int main(int argc, char ** argv) {
+//    CDBG_FEATURE_ENABLE(CDBG_MODULES_ALL, CDBG_FEATURE_ALL);
+
     EGLDisplay egl_display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+
+//    CDBG_FEATURE_DISABLE(CDBG_MODULES_ALL, CDBG_FEATURE_ALL);
+
     if (egl_display == EGL_NO_DISPLAY) {
         printf("eglGetDisplay() error: 0x%x\n", eglGetError());
         exit(EXIT_FAILURE);
     }
+
+//    eglp_display * dpy = (eglp_display *) egl_display;
+//    printf("after eglGetDisplay: dpy->refcount = %p\n", &dpy->refcount);
 
     int major, minor;
     int rc = eglInitialize(egl_display, &major, &minor);
@@ -23,6 +48,10 @@ int main(int, char **) {
         printf("eglInitialize() error: 0x%x\n", eglGetError());
         exit(EXIT_FAILURE);
     }
+
+    cctx_context * cctx = cctx_get_default();
+    cctx_release(cctx); // cctx_get_default() increases ref counter, so immaediately release it
+    printf("cctx_get_default() = %p &cctx->cctxp_refcount = %p cctxp_refcount = %d\n", cctx, (void *)&cctx->cctxp_refcount, cctx->cctxp_refcount.cutilsp_refcount.refcount.osup_internal_struct.val);
 
     EGLint attribs[] = {
         EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
@@ -54,7 +83,13 @@ int main(int, char **) {
     EGLContext egl_context = eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, context_attribs);
     
     EGLint window_attribs[] = { EGL_NONE };
-    EGLSurface offscreen_egl_surface = eglCreateWindowSurface(egl_display, egl_config, new NativeWindowProxy(), window_attribs);
+
+    if(!native_window)
+        native_window = new NativeWindowProxy();
+    else
+        static_cast<NativeWindowProxy *>(native_window)->init();
+
+    EGLSurface offscreen_egl_surface = eglCreateWindowSurface(egl_display, egl_config, native_window, window_attribs);
 //    EGLSurface offscreen_egl_surface = eglCreateWindowSurface(egl_display, egl_config, new HWCNativeWindow(), window_attribs);
 
     eglMakeCurrent(egl_display, offscreen_egl_surface, offscreen_egl_surface, egl_context);
@@ -122,6 +157,53 @@ int main(int, char **) {
         glDisableVertexAttribArray(colorHandle);
 
         eglSwapBuffers(egl_display, offscreen_egl_surface);
+        printf("press enter to draw next frame..\n");
+        char buf[256];
+        gets(buf);
+        if(buf[0] == 'k') {
+            printf("kill all\n\n\n\n\n\n\n\n\n\n");
+//            native_window->common.decRef(&native_window->common);
+//            printf("after native_window::decRef\n");
+
+//            glDeleteProgram(triangleProgram);
+//            printf("after glDeleteProgram\n");
+
+//            glReleaseShaderCompiler();
+//            printf("after glReleaseShaderCompiler\n");
+
+             EGLBoolean result;
+//             result = eglDestroySurface(egl_display, offscreen_egl_surface);
+//             printf("eglDestroyWindowSurface result = %d\n", result);
+// 
+//             result = eglDestroyContext(egl_display, egl_context);
+//             printf("eglDestroyContext result = %d\n", result);
+
+            result = eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+            printf("eglMakeCurrent(EGL_NO_SURFACE, EGL_NO_CONTEXT) result = %d\n", result);
+
+//            eglReleaseThread();
+//            printf("after eglReleaseThread\n");
+
+            result = eglTerminate(egl_display);
+            printf("eglTerminate result = %d\n", result);
+
+             printf("cctx_get_default() = %p cctxp_refcount = %d\n", cctx, cctx->cctxp_refcount.cutilsp_refcount.refcount.osup_internal_struct.val);
+             printf("press enter to cctx_release(cctx_get_default())\n");
+             gets(buf);
+
+//            osup_destructor(); // it should release the last reference
+            cctx_release(cctx);
+            printf("cctx_get_default() = %p cctxp_refcount = %d\n", cctx, cctx->cctxp_refcount.cutilsp_refcount.refcount.osup_internal_struct.val);
+
+//            printf("after eglTerminate: dpy->refcount = %d\n", dpy->refcount.cutilsp_refcount.refcount.osup_internal_struct.val);
+
+            static_cast<NativeWindowProxy *>(native_window)->deinit();
+            printf("after native_window::deinit\n");
+
+            printf("press enter to call main again\n");
+            gets(buf);
+            return main(argc, argv);
+        }
     }
     return 0;
 }

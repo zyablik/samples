@@ -185,7 +185,8 @@ int HWCNativeWindow::_query(const ANativeWindow * window, int what, int* value) 
             *value = 0;
             break;
         case NATIVE_WINDOW_MIN_UNDEQUEUED_BUFFERS:
-            *value = 1;
+            *value = 0; // save one buffer in cache
+//            *value = 1;
             break;
         case NATIVE_WINDOW_DEFAULT_DATASPACE:
             *value = HAL_DATASPACE_UNKNOWN;

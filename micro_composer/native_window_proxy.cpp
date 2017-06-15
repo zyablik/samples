@@ -24,8 +24,16 @@ NativeWindowProxy::NativeWindowProxy(): mRefCount(0) {
     const_cast<int&>(ANativeWindow::maxSwapInterval) = 0;
 
     android::ProcessState::self()->startThreadPool();
+    init();
+}
 
+void NativeWindowProxy::init() {
     android::sp<android::IServiceManager> service_manager = android::defaultServiceManager();
+    if(service_manager == NULL) {
+        printf("service_manager is null\n");
+        exit(1);
+    }
+
     android::sp<android::IBinder> composer_binder = service_manager->getService(android::String16(MICRO_COMPOSER_SERVICE_NAME));
     if (composer_binder == NULL) {
         printf("composer_binder is null\n");
@@ -46,15 +54,12 @@ NativeWindowProxy::NativeWindowProxy(): mRefCount(0) {
     }
 }
 
+    native_window_binder = NULL;
+}
+
 NativeWindowProxy::~NativeWindowProxy() {
     printf("NativeWindowProxy::~NativeWindowProxy this = %p\n", this);
-
-    android::Parcel query, response;
-    android::status_t result = native_window_binder->transact(INativeWindow::DESTROY_TRANSACTION, query, &response);
-    if(result != android::NO_ERROR)
-        printf("NativeWindowProxy::~NativeWindowProxy this = %p native_window_binder->transact(INativeWindow::DESTROY_TRANSACTION) failed result = %s\n", this, android_status(result).c_str());
-
-    native_window_binder = NULL;
+    deinit();
 }
 
 void NativeWindowProxy::_incRef(struct android_native_base_t * base) {

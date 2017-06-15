@@ -27,10 +27,18 @@ LOCAL_SRC_FILES :=          \
     utils.cpp               \
 
 LOCAL_CFLAGS := -O0 -g3
-LOCAL_SHARED_LIBRARIES := libEGL libGLESv2 libui libcutils libbinder libgui libutils libhardware libsync
+LOCAL_SHARED_LIBRARIES := libEGL libGLESv2 libGLES_mali_v2 libui libcutils libbinder libgui libutils libhardware libsync
 LOCAL_C_INCLUDES :=  \
     frameworks/native/include   \
     system/core/libsync/include \
+    vendor/hisi/thirdparty/gpu/arm/bifrost-r2p0-02dev0/ \
+    vendor/hisi/thirdparty/gpu/arm/bifrost-r2p0-02dev0/build/17d76acd-target/base \
+    vendor/hisi/thirdparty/gpu/arm/bifrost-r2p0-00dev0/osu/platform \
+    vendor/hisi/thirdparty/gpu/arm/bifrost-r2p0-02dev0/base/platform_dummy \
+    vendor/hisi/thirdparty/gpu/arm/bifrost-r2p0-02dev0/osu/platform_dummy \
+    vendor/hisi/thirdparty/gpu/arm/bifrost-r2p0-02dev0/stdlib/platform_dummy \
+    vendor/hisi/thirdparty/gpu/arm/bifrost-r2p0-02dev0/kernel/drivers/gpu/arm \
+    vendor/hisi/thirdparty/gpu/arm/bifrost-r2p0-02dev0/cl/src \
 
 
 include $(BUILD_EXECUTABLE)

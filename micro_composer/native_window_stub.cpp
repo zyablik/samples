@@ -59,12 +59,6 @@ android::status_t NativeWindowStub::onTransact(uint32_t code, const android::Par
             break;
         }
 
-        case INativeWindow::DESTROY_TRANSACTION: {
-            printf("[tid = %d] NativeWindowStub::onTransact DESTROY_TRANSACTION received\n", gettid());
-            delete this;
-            break;
-        }
-
         default:
             printf("NativeWindowStub::onTransact unknown code = %d\n", code);
     }

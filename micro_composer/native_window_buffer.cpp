@@ -6,18 +6,22 @@
 
 hw_module_t * NativeWindowBuffer::gr_module = NULL;
 alloc_device_t * NativeWindowBuffer::gr_dev = NULL;
+std::list<NativeWindowBuffer *> NativeWindowBuffer::all;
 
 NativeWindowBuffer::NativeWindowBuffer(): fenceFd(-1), mRefCount(0) {
-    printf("[tid = %d] NativeWindowBuffer::NativeWindowBuffer: created: this = %p anwb = %p\n", gettid(), this, static_cast<ANativeWindowBuffer *>(this));
+    all.push_back(this);
+    printf("[tid = %d] NativeWindowBuffer::NativeWindowBuffer: created: this = %p anwb = %p all.size = %lu\n", gettid(), this, static_cast<ANativeWindowBuffer *>(this), all.size());
 
     ANativeWindowBuffer::handle = nullptr;
     ANativeWindowBuffer::common.incRef = _incRef;
     ANativeWindowBuffer::common.incRef(&common);
     ANativeWindowBuffer::common.decRef = _decRef;
+    
 }
 
 NativeWindowBuffer::NativeWindowBuffer(int _width, int _height, int _format, int _usage): fenceFd(-1), mRefCount(0) {
-    printf("[tid = %d] NativeWindowBuffer::NativeWindowBuffer = %p anwb = %p\n", gettid(), this, static_cast<ANativeWindowBuffer *>(this));
+    all.push_back(this);
+    printf("[tid = %d] NativeWindowBuffer::NativeWindowBuffer = %p anwb = %p all.size = %lu\n", gettid(), this, static_cast<ANativeWindowBuffer *>(this), all.size());
     ANativeWindowBuffer::width = _width;
     ANativeWindowBuffer::height = _height;
     ANativeWindowBuffer::format = _format;
@@ -52,8 +56,9 @@ NativeWindowBuffer::NativeWindowBuffer(int _width, int _height, int _format, int
 }
 
 NativeWindowBuffer::~NativeWindowBuffer() {
-    printf("[tid = %d] NativeWindowBuffer::~NativeWindowBuffer this = %p anwb = %p ownGrMemory = %d gr_dev = %p handle = %p\n",
-           gettid(), this, static_cast<ANativeWindowBuffer *>(this), ownGrMemory, gr_dev, handle);
+    all.remove(this);
+    printf("[tid = %d] NativeWindowBuffer::~NativeWindowBuffer this = %p anwb = %p ownGrMemory = %d gr_dev = %p handle = %p all.size = %lu\n",
+           gettid(), this, static_cast<ANativeWindowBuffer *>(this), ownGrMemory, gr_dev, handle, all.size());
     if(ownGrMemory) {
         if(gr_dev)
             gr_dev->free(gr_dev, handle);
@@ -64,6 +69,7 @@ NativeWindowBuffer::~NativeWindowBuffer() {
 
     if(fenceFd != -1)
         close(fenceFd);
+
 }
 
 int NativeWindowBuffer::closeGrDev() {

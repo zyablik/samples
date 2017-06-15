@@ -1,7 +1,9 @@
 #pragma once
 
 #include <hardware/gralloc.h>
+#include <list>
 #include <system/window.h>
+
 
 // <cutils/native_handle.h>:
 // typedef struct native_handle {
@@ -50,6 +52,8 @@ class NativeWindowBuffer: public ANativeWindowBuffer {
 public:
     NativeWindowBuffer();
     NativeWindowBuffer(int width, int height, int format, int usage);
+
+    static std::list<NativeWindowBuffer *> all;
 
     static int closeGrDev();
 

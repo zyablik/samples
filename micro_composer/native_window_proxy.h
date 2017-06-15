@@ -8,6 +8,8 @@ class NativeWindowBuffer;
 class NativeWindowProxy: public ANativeWindow {
 public:
     NativeWindowProxy();
+    void init();
+    void deinit();
 
 private:
     virtual ~NativeWindowProxy();
