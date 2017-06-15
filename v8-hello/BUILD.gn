@@ -1,0 +1,22 @@
+import("//v8/gni/v8.gni")
+import("//v8/gni/isolate.gni")
+import("//build_overrides/v8.gni")
+import("//v8/snapshot_toolchain.gni")
+
+v8_executable("v8_hello") {
+  sources = [
+    "main.cpp",
+  ]
+
+  configs = [
+    "//v8:internal_config_base",
+  ]
+
+  deps = [
+    "//v8:v8",
+    "//v8:v8_libbase",
+    "//v8:v8_libplatform",
+  ]
+
+  deps += [ "//third_party/icu" ]
+}
