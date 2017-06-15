@@ -1,6 +1,6 @@
 executable("mojo-channel-single-process") {
   sources = [
-    "mojo_channel_single_process.cc",
+    "mojo_channel_single_process.55.cc",
   ]
 
   deps = [
@@ -11,7 +11,7 @@ executable("mojo-channel-single-process") {
 
 executable("mojo-channel-multi-process-master") {
   sources = [
-    "mojo_channel_multi_process_master.cc",
+    "mojo_channel_multi_process_master.55.cc",
   ]
 
   deps = [
@@ -22,7 +22,7 @@ executable("mojo-channel-multi-process-master") {
 
 executable("mojo-channel-multi-process-slave") {
   sources = [
-    "mojo_channel_multi_process_slave.cc",
+    "mojo_channel_multi_process_slave.55.cc",
   ]
 
   deps = [
@@ -54,7 +54,7 @@ executable("hello-mojo-single-process") {
   ]
 
   sources = [
-    "hello_mojo_single_process.cc",
+    "hello_mojo_single_process.55.cc",
   ]
 }
 
@@ -66,7 +66,7 @@ executable("hello-mojo-multi-process-master") {
   ]
 
   sources = [
-    "hello_mojo_multi_process_master.cc",
+    "hello_mojo_multi_process_master.55.cc",
   ]
 }
 
@@ -78,7 +78,7 @@ executable("hello-mojo-multi-process-slave") {
   ]
 
   sources = [
-    "hello_mojo_multi_process_slave.cc",
+    "hello_mojo_multi_process_slave.55.cc",
   ]
 }
 
@@ -98,7 +98,7 @@ executable("interface-registry-single-process") {
   ]
 
   sources = [
-    "interface_registry_single_process.cc",
+    "interface_registry_single_process.55.cc",
   ]
 }
 
@@ -111,7 +111,7 @@ executable("interface-registry-multi-process-master") {
   ]
 
   sources = [
-    "interface_registry_multi_process_master.cc",
+    "interface_registry_multi_process_master.55.cc",
   ]
 }
 
@@ -124,7 +124,7 @@ executable("interface-registry-multi-process-slave") {
   ]
 
   sources = [
-    "interface_registry_multi_process_slave.cc",
+    "interface_registry_multi_process_slave.55.cc",
   ]
 }
 
@@ -143,9 +143,9 @@ group("all") {
     ":hello-mojo-multi-process",
     ":interface-registry-single-process",
     ":interface-registry-multi-process",
-    "service_manager_dummy_runner_single_process:service-manager-dummy-runner-single-process",
-    "service_manager_dummy_runner_multi_process:service-manager-dummy-runner-multi-process",
-    "service_manager_native_runner_single_process:service-manager-native-runner-single-process",
-    "service_manager_native_runner_multi_process:service-manager-native-runner-multi-process",
+    "service_manager_dummy_runner_single_process.55:service-manager-dummy-runner-single-process",
+    "service_manager_dummy_runner_multi_process.55:service-manager-dummy-runner-multi-process",
+    "service_manager_native_runner_single_process.55:service-manager-native-runner-single-process",
+    "service_manager_native_runner_multi_process.55:service-manager-native-runner-multi-process",
   ]
 }

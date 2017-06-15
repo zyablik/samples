@@ -47,6 +47,6 @@ public:
   mojo::BindingSet<mojom::SomeInterface> bindings_;
 };
 
-extern "C" MojoResult ServiceMain(MojoHandle service_request_handle) __attribute__ ((visibility ("default")))  {
+extern "C" __attribute__ ((visibility ("default"))) MojoResult ServiceMain(MojoHandle service_request_handle) {
   return shell::ServiceRunner(new OtherService).Run(service_request_handle);
 }

@@ -1,0 +1,23 @@
+import("//services/service_manager/public/cpp/service.gni")
+import("//mojo/public/tools/bindings/mojom.gni")
+
+mojom("some_interface") {
+  sources = [
+    "some_interface.mojom",
+  ]
+}
+
+executable("service-manager-dummy-runner-single-process") {
+deps = [
+    ":some_interface",
+    "//base",
+    "//mojo/edk/system",
+    "//mojo/public/cpp/bindings",
+    "//services/service_manager/public/cpp:cpp",
+    "//services/service_manager:service_manager",
+  ]
+
+  sources = [
+    "main.cc",
+  ]
+}
