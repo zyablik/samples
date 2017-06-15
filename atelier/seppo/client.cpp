@@ -48,9 +48,21 @@ public:
 
 int main(int, char *[])
 {
-    CommandClient client;
-    client.start();
+    printf("press enter to create seppo::Client\n");
+    char buf[32];
+    gets(buf);
 
+    CommandClient client;
+    
+//    printf("press enter to client.start()\n");
+//    gets(buf);
+
+//    looks like this is not necessary    
+//    client.start();
+
+    printf("press enter to send msg\n");
+    gets(buf);
+    
     char msg[] = "hello from client";
     seppo::ReferencedPointer<seppo::ParcelMessage> simple_command = seppo::ParcelMessage::createCommandTemplate(sizeof(msg) + 1);
     strcpy(simple_command->messageDataPointer(), msg);
@@ -58,6 +70,9 @@ int main(int, char *[])
 
     auto shm_command = seppo::ParcelMessage::createCommandTemplate();
     auto parcel = seppo::ParcelMessage::getParcel(shm_command);
+
+    printf("press enter to send msg\n");
+    gets(buf);
 
     size_t shm_size = 1024;
     SharedMemoryImpl shm("seppo_client_test_shm", shm_size);
