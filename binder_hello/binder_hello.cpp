@@ -1,5 +1,6 @@
 #include <binder/IPCThreadState.h>
 #include <binder/IServiceManager.h>
+#include <ngShm.hpp>
 
 android::String16 TestServiceName("TestSimpleServer");
 
@@ -45,8 +46,18 @@ private:
 };
 
 int main(int, char **) {
+    char buf[32];
+    printf("press enter to android::ProcessState::self()->startThreadPool()\n");
+    gets(buf);
+
     android::ProcessState::self()->startThreadPool();
+    printf("press enter to android::defaultServiceManager()\n");
+    gets(buf);
+
     android::sp<android::IServiceManager> service_manager = android::defaultServiceManager();
+    printf("press enter to service_manager->addService()\n");
+    gets(buf);
+
     int result = service_manager->addService(TestServiceName, new SimpleService());
     if (result != 0) {
         printf("addService %s failed, result: %i errno %d, %s\n", android::String8(TestServiceName).string(), result, errno, strerror(errno));
@@ -56,6 +67,18 @@ int main(int, char **) {
     printf("registered service %s\n", android::String8(TestServiceName).string());
 
     sleep(1); // wait for service start
+
+    printf("press enter to ng_shm_attach\n");
+    gets(buf);
+    ng_shm_attach();
+    
+    printf("press enter to ng_shm_reattach\n");
+    gets(buf);
+    ng_shm_reattach();
+    
+    printf("press enter to service_manager->getService(TestServiceName)\n");
+    gets(buf);
+    
     android::sp<android::IBinder> binder = service_manager->getService(TestServiceName);
     if (binder == NULL) {
         printf("binder service not started\n");
