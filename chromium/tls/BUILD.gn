@@ -1,0 +1,10 @@
+executable("tls-hello") {
+  deps = [
+    "//base",
+#    "//ipc:ipc",
+  ]
+
+  sources = [
+    "tls_hello.cc",
+  ]
+}
