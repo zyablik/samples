@@ -1,0 +1,47 @@
+executable("ipc-hello-single-process") {
+  deps = [
+    "//base",
+    "//ipc:ipc",
+    "//mojo/edk/system",
+  ]
+
+  sources = [
+    "ipc_hello_world_client_and_server.cc",
+  ]
+}
+
+executable("ipc-hello-single-process-io-thread") {
+  deps = [
+    "//base",
+    "//ipc:ipc",
+    "//mojo/edk/system",
+  ]
+
+  sources = [
+    "ipc_hello_world_single_process_io_thread.cc",
+  ]
+}
+
+executable("ipc-hello-multi-process-client") {
+  deps = [
+    "//base",
+    "//ipc:ipc",
+    "//mojo/edk/system",
+  ]
+
+  sources = [
+    "ipc_hello_world_client.cc",
+  ]
+}
+
+executable("ipc-hello-multi-process-server") {
+  deps = [
+    "//base",
+    "//ipc:ipc",
+    "//mojo/edk/system",
+  ]
+
+  sources = [
+    "ipc_hello_world_server.cc",
+  ]
+}
