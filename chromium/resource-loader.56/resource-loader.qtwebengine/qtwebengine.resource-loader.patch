@@ -1,0 +1,12 @@
+diff --git a/src/core/qtwebengine.gni b/src/core/qtwebengine.gni
+index 56f0c74a..79e16991 100644
+--- a/src/core/qtwebengine.gni
++++ b/src/core/qtwebengine.gni
+@@ -28,6 +28,7 @@ deps = [
+   "//third_party/webrtc/base:base",
+   "//ui/accessibility",
+   "//third_party/mesa:mesa_headers",
++  "//samples/resource-loader:resource-loader",
+   ":qtwebengine_sources",
+   ":qtwebengine_resources"
+ ]

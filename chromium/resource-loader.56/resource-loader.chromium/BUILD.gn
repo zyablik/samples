@@ -1,0 +1,15 @@
+
+source_set("resource-loader") {
+  sources = [
+    "main.cpp",
+  ]
+
+  configs += [
+  ]
+
+  deps = [
+    "//third_party/icu",
+    "//third_party/WebKit/public:blink",
+    "//skia"
+  ]
+}
