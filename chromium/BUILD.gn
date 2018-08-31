@@ -1,0 +1,9 @@
+executable("waitable-event") {
+  deps = [
+    "//base",
+  ]
+
+  sources = [
+    "waitable_event.cc",
+  ]
+}
