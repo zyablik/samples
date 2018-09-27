@@ -9,6 +9,7 @@ OBJFILES = \
 	loader.o  \
 	common/printf.o  \
 	common/screen.o  \
+	pci.o \
 	kernel.o
 
 image: kernel.bin
@@ -25,7 +26,6 @@ image: kernel.bin
 
 	@echo "Format partition..."
 	sudo mkfs.vfat /dev/loop2
-#	sudo mkdosfs /dev/loop2
 
 	@echo "Copy kernel and grub files on partition..."
 	@mkdir -p tempdir
