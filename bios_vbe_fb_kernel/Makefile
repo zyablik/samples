@@ -9,6 +9,19 @@ OBJFILES = \
 	loader.o  \
 	common/printf.o  \
 	common/screen.o  \
+	common/bios.o  \
+	common/vbe.o  \
+	common/qdivrem.o  \
+	common/udivdi3.o  \
+	common/umoddi3.o  \
+	common/divdi3.o  \
+	common/moddi3.o  \
+	common/setjmp.o  \
+	common/string.o  \
+	common/s_floor.o  \
+	x86emu/x86emu.o  \
+	x86emu/x86emu_util.o  \
+	fractal.o \
 	pci.o \
 	kernel.o
 
@@ -61,7 +74,7 @@ rebuild: clean all
 	as ${ASFLAGS} -o $@ $<
 
 .c.o:
-	$(CC) -Iinclude $(CFLAGS) -o $@ -c $<
+	$(CC) -Ix86emu -Iinclude $(CFLAGS) -o $@ -c $<
 
 kernel.bin: $(OBJFILES)
 	$(LD) ${LFLAGS} -T linker.ld -o $@ $^
