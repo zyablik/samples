@@ -1,0 +1,4 @@
+source: intel-gpu-tools/tests/gem_exec_nop.c
+
+intel_aubdump ./gem-exec-nop
+./src/intel/tools/aubinator --no-pager ~/gem_exec_nop/intel.aub
