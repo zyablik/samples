@@ -1,0 +1,4 @@
+source: intel-gpu-tools/tests/gem_render_copy.c
+
+intel_aubdump ./gem-render-copy
+./src/intel/tools/aubinator --no-pager ~/gem_render_copy/intel.aub
