@@ -16,9 +16,9 @@
 
 #define BATCH_SZ 4096
 
-#define WIDTH 512
+#define WIDTH 1920
 #define STRIDE (WIDTH * 4)
-#define HEIGHT 512
+#define HEIGHT 1080
 
 #define DST_COLOR	0xffff0000
 
@@ -29,7 +29,7 @@ uint8_t * ALIGN(void * pointer, uintptr_t alignment) {
     return (uint8_t *)(((uintptr_t) p) & -alignment);
 }
 
-void write_ppm(const char * file, uint32_t width, uint32_t height, uint32_t * argb) {
+void write_ppm(const char * file, uint32_t width, uint32_t height, const uint32_t * argb) {
     printf("write_ppm file: %s width = %d height = %d, argb = %p\n", file, width, height, argb);
     FILE * fp = fopen(file, "wb");
     if(fp == NULL) {
@@ -38,13 +38,11 @@ void write_ppm(const char * file, uint32_t width, uint32_t height, uint32_t * ar
     }
 
     fprintf(fp, "P3\n%d %d\n255\n", width, height);
-    for (size_t j = 0; j < height; ++j) {
-        for (size_t i = 0; i < width; ++i) {
-            uint8_t color[3];
-            uint8_t red = (argb[j * height + i] >> 16) & 0x000000ff;
-            uint8_t green = (argb[j * height + i] >> 8) & 0x000000ff;
-            uint8_t blue = (argb[j * height + i] >> 0) & 0x000000ff;
-
+    for(int y = 0 ; y < height; y++) {
+        for(int x = 0 ; x < width; x++) {
+            uint8_t red = (argb[y * width + x] >> 16) & 0x000000ff;
+            uint8_t green = (argb[y * width + x] >> 8) & 0x000000ff;
+            uint8_t blue = (argb[y * width + x] >> 0) & 0x000000ff;
             fprintf(fp, "%d %d %d  ", red, green, blue);
         }
         fprintf(fp, "\n");
@@ -92,14 +90,17 @@ int main(int argc, char ** argv) {
     drm_intel_bo * dst_bo = drm_intel_bo_alloc(bufmgr, "dst_bo", HEIGHT * STRIDE, 4096);
     printf("drm_intel_bo_alloc(dst_bo, HEIGHT * STRIDE = %d): dst_bo = %p\n", HEIGHT * STRIDE, dst_bo);
 
-    __attribute__((aligned(4096))) uint32_t linear[WIDTH * HEIGHT] = { 0 };
+    const int linear_size = WIDTH * HEIGHT * sizeof(uint32_t);
+    uint32_t * linear = (uint32_t *)ALIGN(malloc(linear_size + 4096), 4096);
+    memset(linear, 0, linear_size);
+
     for (int i = 0; i < WIDTH * HEIGHT; i++)
         linear[i] = DST_COLOR;
 
     /// gem_write(drm_fd, dst_bo->handle, 0, linear, sizeof(linear));
     struct drm_i915_gem_pwrite gem_pwrite_dst = { 0 };
     gem_pwrite_dst.handle = dst_bo->handle;
-    gem_pwrite_dst.size = sizeof(linear);
+    gem_pwrite_dst.size = linear_size;
     gem_pwrite_dst.data_ptr = (uintptr_t)linear;
     ret = ioctl(dri_fd, DRM_IOCTL_I915_GEM_PWRITE, &gem_pwrite_dst);
     if (ret == -1) {
@@ -153,26 +154,6 @@ int main(int argc, char ** argv) {
     #define PIPELINE_SELECT_3D 0
     *ptr++ = (GEN7_PIPELINE_SELECT | PIPELINE_SELECT_3D);
 
-    #define GEN7_STATE_SIP				GEN7_3D(0, 1, 2)
-    *ptr++ = GEN7_STATE_SIP;
-    *ptr++ = 0x0;
-
-    #define GEN7_3DSTATE_AA_LINE_PARAMETERS	GEN7_3D(3, 1, 0x0A)
-    *ptr++ = (GEN7_3DSTATE_AA_LINE_PARAMETERS | 1);
-    *ptr++ = 0x0;
-    *ptr++ = 0x0;
-
-    #define GEN7_3DSTATE_VF_STATISTICS		GEN7_3D(1, 0, 0xb)
-    *ptr++ = GEN7_3DSTATE_VF_STATISTICS | 1;
-
-    *ptr++ = (GEN7_PIPE_CONTROL | 3);
-    *ptr++ = 0x00105021;
-    *ptr++ = 0x0;
-    *ptr++ = 0x0;
-    *ptr++ = 0x0;
-
-    // MI_LOAD_REGISTER_MEM
-
     // ------------------------------------------------------------------------
     /// gen7_emit_state_base_address(batch);
 
@@ -219,13 +200,6 @@ int main(int argc, char ** argv) {
     *ptr++ = 0;
     *ptr++ = (0 | BASE_ADDRESS_MODIFY);
 
-
-    *ptr++ = (GEN7_PIPE_CONTROL | 3);
-    *ptr++ = 0x00000c04;
-    *ptr++ = 0x0;
-    *ptr++ = 0x0;
-    *ptr++ = 0x0;
-
     #define GEN7_3DSTATE_VIEWPORT_STATE_POINTERS_CC GEN7_3D(3, 0, 0x23)
     *ptr++ = (GEN7_3DSTATE_VIEWPORT_STATE_POINTERS_CC | (2 - 2));
 
@@ -235,7 +209,7 @@ int main(int argc, char ** argv) {
         float max_depth;
     };
 
-    gen7_cc_viewport * vp = (gen7_cc_viewport *) ALIGN(state, 32);
+    struct gen7_cc_viewport * vp = (struct gen7_cc_viewport *) ALIGN(state, 32);
     state = (uint8_t *)vp + sizeof(*vp);
 
     vp->min_depth = 0.0;
@@ -270,44 +244,23 @@ int main(int argc, char ** argv) {
         float pad1[4];
     };
 
-	gen7_sf_clip_viewport * scv_state = (gen7_sf_clip_viewport *) ALIGN(state, 64);
+	struct gen7_sf_clip_viewport * scv_state = (struct gen7_sf_clip_viewport *) ALIGN(state, 64);
 
     state = (uint8_t *) scv_state + sizeof(*scv_state);
 
-    scv_state->viewport.m00 = 512.0 / (1 - (-1));
-    scv_state->viewport.m11 = -1 * 512.0 / (1 - (-1));
+    scv_state->viewport.m00 = WIDTH / (1.0 - (-1.0));
+    scv_state->viewport.m11 = -1.0 * HEIGHT / (1 - (-1));
     scv_state->viewport.m22 = 0;
-    scv_state->viewport.m30 = 256.0;
-    scv_state->viewport.m31 = 256.0;
+    scv_state->viewport.m30 = WIDTH / 2.0;
+    scv_state->viewport.m31 = HEIGHT / 2.0;
     scv_state->viewport.m32 = 0;
 
-	scv_state->guardband.xmin = -1.0;
-	scv_state->guardband.xmax =  1.0;
-	scv_state->guardband.ymin = -1.0;
-	scv_state->guardband.ymax =  1.0;
+	scv_state->guardband.xmin = -17.066668;//-1.0;
+	scv_state->guardband.xmax = 17.066668;// 1.0;
+	scv_state->guardband.ymin = -30.340740;//-1.0;
+	scv_state->guardband.ymax =  30.340740;//1.0;
 
     *ptr++ = ((uint8_t *)scv_state - batch_buffer);
-
-    *ptr++ = (GEN7_PIPE_CONTROL | 3);
-    *ptr++ = 0x00100020;
-    *ptr++ = 0x0;
-    *ptr++ = 0x0;
-    *ptr++ = 0x0;
-
-    *ptr++ = (GEN7_PIPE_CONTROL | 3);
-    *ptr++ = 0x00000c0c;
-    *ptr++ = 0x0;
-    *ptr++ = 0x0;
-    *ptr++ = 0x0;
-
-    *ptr++ = (GEN7_PIPE_CONTROL | 3);
-    *ptr++ = 0x00100020;
-    *ptr++ = 0x0;
-    *ptr++ = 0x0;
-    *ptr++ = 0x0;
-
-    // MI_LOAD_REGISTER_IMM register L3SQCREG1 (0xb010): 0x1610000
-    // MI_LOAD_REGISTER_IMM register SCRATCH1 (0xb038): 0x8000000
 
     // gen7_emit_urb(batch);
 
@@ -405,7 +358,7 @@ int main(int argc, char ** argv) {
         } blend1;
     };
 
-    gen7_blend_state * blend = (gen7_blend_state *) ALIGN(state, 64);
+    struct gen7_blend_state * blend = (struct gen7_blend_state *) ALIGN(state, 64);
     printf("blend = %p state = %p\n", blend, state);
 
     state = (uint8_t *)blend + sizeof(*blend);
@@ -451,7 +404,7 @@ int main(int argc, char ** argv) {
         float constant_a;
     };
 
-  	gen7_color_calc_state * cc_state = (gen7_color_calc_state *) ALIGN(state, 64);
+  	struct gen7_color_calc_state * cc_state = (struct gen7_color_calc_state *) ALIGN(state, 64);
     state = (uint8_t *)cc_state + sizeof(*cc_state);
 
     *ptr++ = ((uint8_t *)cc_state - batch_buffer) | 1;
@@ -494,7 +447,7 @@ int main(int argc, char ** argv) {
         } ds2;
     };
 
-    gen7_depth_stencil_state * depth_stencil_state = (gen7_depth_stencil_state *) ALIGN(state, 64);
+    struct gen7_depth_stencil_state * depth_stencil_state = (struct gen7_depth_stencil_state *) ALIGN(state, 64);
     state = (uint8_t *)depth_stencil_state + sizeof(*depth_stencil_state);
 
     *ptr++ = ((uint8_t *)depth_stencil_state - batch_buffer);
@@ -565,6 +518,8 @@ int main(int argc, char ** argv) {
         #define GEN7_SURFACE_TYPE_SHIFT 29
         #define GEN7_SURFACE_FORMAT_SHIFT 18
         ss[0] = (GEN7_SURFACE_2D << GEN7_SURFACE_TYPE_SHIFT | 0 | GEN7_SURFACEFORMAT_B8G8R8A8_UNORM << GEN7_SURFACE_FORMAT_SHIFT); // I915_TILING_NONE
+
+        //ss[0] = 0x3300443f;
 
         ss[1] = dst_bo->offset;
 
@@ -769,8 +724,7 @@ int main(int argc, char ** argv) {
 
     #define GEN7_WM_DISPATCH_ENABLE (1 << 29)
     #define GEN7_WM_PERSPECTIVE_PIXEL_BARYCENTRIC (1 << 11)
-    // *ptr++ = (GEN7_WM_DISPATCH_ENABLE | GEN7_WM_PERSPECTIVE_PIXEL_BARYCENTRIC);
-    *ptr++ = 0xa0000844;
+    *ptr++ = (GEN7_WM_DISPATCH_ENABLE | GEN7_WM_PERSPECTIVE_PIXEL_BARYCENTRIC);
     *ptr++ = 0;
 
     // ------------------------------------------------------------------------
@@ -866,32 +820,12 @@ int main(int argc, char ** argv) {
         uint32_t ymax:16;
     };
 
-    gen_scissor_rect * scissor_rect = (gen_scissor_rect *) ALIGN(state, 64);
+    struct gen_scissor_rect * scissor_rect = (struct gen_scissor_rect *) ALIGN(state, 64);
     state = (uint8_t *)scissor_rect + sizeof(*scissor_rect);
     scissor_rect->xmax = WIDTH - 1;
-    scissor_rect->ymax = (STRIDE / sizeof(uint32_t) - 1);
+    scissor_rect->ymax = HEIGHT - 1;
 
     *ptr++ = ((uint8_t *)scissor_rect - batch_buffer);
-
-    // ------------------------------------------------------------------------
-
-    *ptr++ = (GEN7_PIPE_CONTROL | 3);
-    *ptr++ = 0x00002000;
-    *ptr++ = 0x0;
-    *ptr++ = 0x0;
-    *ptr++ = 0x0;
-
-    *ptr++ = (GEN7_PIPE_CONTROL | 3);
-    *ptr++ = 0x00000001;
-    *ptr++ = 0x0;
-    *ptr++ = 0x0;
-    *ptr++ = 0x0;
-
-    *ptr++ = (GEN7_PIPE_CONTROL | 3);
-    *ptr++ = 0x00002000;
-    *ptr++ = 0x0;
-    *ptr++ = 0x0;
-    *ptr++ = 0x0;
 
     // ------------------------------------------------------------------------
 
@@ -1003,16 +937,19 @@ int main(int argc, char ** argv) {
     #define GEN7_VE1_VFCOMPONENT_1_SHIFT 24
     #define GEN7_VE1_VFCOMPONENT_2_SHIFT 20
     #define GEN7_VE1_VFCOMPONENT_3_SHIFT 16
-    *ptr++ = (1 << GEN7_VE1_VFCOMPONENT_0_SHIFT |
-              1 << GEN7_VE1_VFCOMPONENT_1_SHIFT |
-              1 << GEN7_VE1_VFCOMPONENT_2_SHIFT |
-              1 << GEN7_VE1_VFCOMPONENT_3_SHIFT
+    *ptr++ = (1 << GEN7_VE1_VFCOMPONENT_0_SHIFT | // x
+              1 << GEN7_VE1_VFCOMPONENT_1_SHIFT | // y
+              1 << GEN7_VE1_VFCOMPONENT_2_SHIFT | // z
+              1 << GEN7_VE1_VFCOMPONENT_3_SHIFT   // w
              );
 
-    // ------------------------------------------------------------------------
-    #define GEN7_3DSTATE_VF				GEN7_3D(3, 0, 0x0c)
-    *ptr++ = GEN7_3DSTATE_VF;
-    *ptr++ = 0;
+*ptr++ = 0x780c0000;
+*ptr++ = 0;
+
+    // // ------------------------------------------------------------------------
+    // #define GEN7_3DSTATE_VF				GEN7_3D(3, 0, 0x0c)
+    // *ptr++ = GEN7_3DSTATE_VF;
+    // *ptr++ = 0;
 
     // ------------------------------------------------------------------------
     #define GEN7_3DPRIMITIVE GEN7_3D(3, 3, 0)
@@ -1028,35 +965,6 @@ int main(int argc, char ** argv) {
     *ptr++ = 1; // 1 instance
     *ptr++ = 0; // start instance location
     *ptr++ = 0; // index buffer offset, ignored
-
-    // ------------------------------------------------------------------------
-
-    *ptr++ = (GEN7_PIPE_CONTROL | 3);
-    *ptr++ = 0x00105021;
-    *ptr++ = 0x0;
-    *ptr++ = 0x0;
-    *ptr++ = 0x0;
-
-    // MI_LOAD_REGISTER_MEM Register Address: 0x0000243c Memory Address: 0x00016000
-
-    *ptr++ = (GEN7_PIPE_CONTROL | 3);
-    *ptr++ = 0x00000c18;
-    *ptr++ = 0x0;
-    *ptr++ = 0x0;
-    *ptr++ = 0x0;
-
-
-    *ptr++ = (GEN7_3DSTATE_CC_STATE_POINTERS | (2 - 2));
-
-    cc_state = (gen7_color_calc_state *) ALIGN(state, 64);
-    state = (uint8_t *)cc_state + sizeof(*cc_state);
-    *ptr++ = ((uint8_t *)cc_state - batch_buffer) | 1;
-
-    *ptr++ = (GEN7_PIPE_CONTROL | 3);
-    *ptr++ = 0x00101000;
-    *ptr++ = 0x0;
-    *ptr++ = 0x0;
-    *ptr++ = 0x0;
 
     // ------------------------------------------------------------------------
 
@@ -1086,11 +994,12 @@ int main(int argc, char ** argv) {
     /// gem_read(data->drm_fd, buf->bo->handle, 0, data->linear, sizeof(data->linear));
     struct drm_i915_gem_pread gem_pread = { 0 };
 
-    uint32_t linear_out[WIDTH * HEIGHT] = { 0 };
+    uint32_t * linear_out = (uint32_t *)ALIGN(malloc(linear_size + 4096), 4096);
+    memset(linear_out, 0, linear_size);
 
     gem_pread.handle = dst_bo->handle;
     gem_pread.data_ptr = (uintptr_t)linear_out;
-    gem_pread.size = sizeof(linear_out);
+    gem_pread.size = linear_size;
     ret = ioctl(dri_fd, DRM_IOCTL_I915_GEM_PREAD, &gem_pread);
     if (ret == -1) {
         printf("error while ioctl(DRM_IOCTL_I915_GEM_PREAD, dst_bo->handle): %d:%s\n", errno, strerror(errno));
