@@ -147,10 +147,10 @@ int main(int argc, char ** argv) {
 
     const GLfloat rect_positions[] = {
         // X, Y, Z, W
-        -1.0f, -1.0f, 0.0f, 1.0f,
-        -1.0f,  1.0f, 0.0f, 1.0f,
-         1.0f, -1.0f, 0.0f, 1.0f,
-         1.0f,  1.0f, 0.0f, 1.0f,
+         0.0f, -1.0f, 0.0f, 1.0f,
+        -1.0f,  0.0f, 0.0f, 1.0f,
+         1.0f,  0.0f, 0.0f, 1.0f,
+         0.0f,  1.0f, 0.0f, 1.0f,
     };
 
     GLint num_vertex = 4;
@@ -181,7 +181,7 @@ int main(int argc, char ** argv) {
     glUseProgram(rectProgram);
 //    glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
-    glVertexAttribPointer(positionHandle, num_vertex, GL_FLOAT, GL_FALSE, 0, rect_positions);
+    glVertexAttribPointer(positionHandle, 4 /* X, Y, Z, W = vec4*/, GL_FLOAT, GL_FALSE, 0, rect_positions);
     glEnableVertexAttribArray(positionHandle);
 
     glDrawArrays(GL_TRIANGLE_STRIP, 0, num_vertex);
