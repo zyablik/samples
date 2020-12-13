@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<protocol name="wcp">
+    <copyright>
+        copyleft
+    </copyright>
+
+    <interface name="wcp_callback" version="1">
+        <request name="invoke">
+            <arg name="magic_number" type="uint"/>
+        </request>
+        <event name="invoked">
+            <arg name="magic_number_1" type="uint" summary="magic_number got from create"/>
+            <arg name="magic_number_2" type="uint" summary="magic_number got from invoke"/>
+        </event>
+    </interface>
+
+    <interface name="wcp_callback_factory" version="7">
+        <request name="create">
+            <arg name="id" type="new_id" interface="wcp_callback"/>
+            <arg name="magic_number" type="uint"/>
+        </request>
+    </interface>
+</protocol>
