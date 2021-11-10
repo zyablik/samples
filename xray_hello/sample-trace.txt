@@ -1,0 +1,25 @@
+{
+  "traceEvents": [
+    { "name" : "std::thread::_State_impl<std::thread::_Invoker<std::tuple<main::$_1> > >::_M_run()", "ph" : "B", "tid" : "44104", "pid" : "44103", "ts" : "143851846580.6123", "sf" : "0" },
+    { "name" : "std::thread::_Invoker<std::tuple<main::$_1> >::operator()()", "ph" : "B", "tid" : "44104", "pid" : "44103", "ts" : "143851846582.3026", "sf" : "1" },
+    { "name" : "void std::thread::_Invoker<std::tuple<main::$_1> >::_M_invoke<0ul>(std::_Index_tuple<0ul>)", "ph" : "B", "tid" : "44104", "pid" : "44103", "ts" : "143851846583.4323", "sf" : "2" },
+    { "name" : "std::__invoke_result<main::$_1>::type std::__invoke<main::$_1>(main::$_1&&)", "ph" : "B", "tid" : "44104", "pid" : "44103", "ts" : "143851846589.7592", "sf" : "3" },
+    { "name" : "void std::__invoke_impl<void, main::$_1>(std::__invoke_other, main::$_1&&)", "ph" : "B", "tid" : "44104", "pid" : "44103", "ts" : "143851846592.0302", "sf" : "4" },
+    { "name" : "void std::__invoke_impl<void, main::$_1>(std::__invoke_other, main::$_1&&)", "ph" : "E", "tid" : "44104", "pid" : "44103", "ts" : "143851849857.6872", "sf" : "4" },
+    { "name" : "std::__invoke_result<main::$_1>::type std::__invoke<main::$_1>(main::$_1&&)", "ph" : "E", "tid" : "44104", "pid" : "44103", "ts" : "143851849858.8157", "sf" : "3" },
+    { "name" : "void std::thread::_Invoker<std::tuple<main::$_1> >::_M_invoke<0ul>(std::_Index_tuple<0ul>)", "ph" : "E", "tid" : "44104", "pid" : "44103", "ts" : "143851849859.7481", "sf" : "2" },
+    { "name" : "std::thread::_Invoker<std::tuple<main::$_1> >::operator()()", "ph" : "E", "tid" : "44104", "pid" : "44103", "ts" : "143851849860.6613", "sf" : "1" },
+    { "name" : "std::thread::_State_impl<std::thread::_Invoker<std::tuple<main::$_1> > >::_M_run()", "ph" : "E", "tid" : "44104", "pid" : "44103", "ts" : "143851849861.5813", "sf" : "0" },
+    { "name" : "std::thread::_State_impl<std::thread::_Invoker<std::tuple<main::$_1> > >::~_State_impl()", "ph" : "B", "tid" : "44104", "pid" : "44103", "ts" : "143851849862.7562", "sf" : "5" },
+    { "name" : "std::thread::_State_impl<std::thread::_Invoker<std::tuple<main::$_1> > >::~_State_impl()", "ph" : "E", "tid" : "44104", "pid" : "44103", "ts" : "143851849884.7060", "sf" : "5" }
+  ],
+  "displayTimeUnit": "ns",
+  "stackFrames": {
+    "0" : { "name" : "std::thread::_State_impl<std::thread::_Invoker<std::tuple<main::$_1> > >::_M_run()" },
+    "2" : { "name" : "void std::thread::_Invoker<std::tuple<main::$_1> >::_M_invoke<0ul>(std::_Index_tuple<0ul>)", "parent": "1" },
+    "4" : { "name" : "void std::__invoke_impl<void, main::$_1>(std::__invoke_other, main::$_1&&)", "parent": "3" },
+    "1" : { "name" : "std::thread::_Invoker<std::tuple<main::$_1> >::operator()()", "parent": "0" },
+    "3" : { "name" : "std::__invoke_result<main::$_1>::type std::__invoke<main::$_1>(main::$_1&&)", "parent": "2" },
+    "5" : { "name" : "std::thread::_State_impl<std::thread::_Invoker<std::tuple<main::$_1> > >::~_State_impl()" }
+  }
+}
