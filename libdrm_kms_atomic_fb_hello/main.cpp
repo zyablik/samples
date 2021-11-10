@@ -7,6 +7,8 @@
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 
+// inspired by https://www.programmersought.com/article/30671609334/
+
 static uint32_t get_property_id(int fd, drmModeObjectProperties *props, const char *name) {
     drmModePropertyPtr property;
     uint32_t i, id = 0;
