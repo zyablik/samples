@@ -1,0 +1,14 @@
+entities:
+- name: hello.hello
+  connections:
+  - target: vfs.vfs_entity
+    id: {var: _VFS_CONNECTION_ID, include: vfs/defs.h}
+  - target: pci.pcisr
+    id: pcisr
+
+- name: vfs.vfs_entity
+  connections:
+  - target: pci.pcisr
+    id: pcisr
+
+- name: pci.pcisr
